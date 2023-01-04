@@ -1,0 +1,30 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://repo1.maven.org/maven2/' }
+        maven {
+            allowInsecureProtocol true
+            url 'http://maven.landicorp.com/repository/ept-and-sdk/'
+        }
+        maven { url 'https://repo.huaweicloud.com/repository/maven/' }
+        maven {
+            url = "https://devrepo.devcloud.cn-east-3.huaweicloud.com/artgalaxy/cn-east-3_0c81d4c71200f2da0f19c01299498820_maven_1_0/"
+            credentials {
+                username = "cn-east-3_0c81d4c71200f2da0f19c01299498820_0c9b8cacba00f3221f75c012ba938a73"
+                password = "8o]Sd[1Q4i"
+            }
+        }
+    }
+}
+rootProject.name = "lifeplus.rtc"
+include ':app'
+include ':webrtc'

@@ -1,0 +1,105 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'maven-publish'
+}
+
+android {
+    namespace 'com.jinkeen.webrtc'
+    compileSdk 32
+
+    defaultConfig {
+        applicationId "com.jinkeen.webrtc"
+        minSdk 24
+        targetSdk 32
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+    sourceSets {
+        main {
+            assets.srcDirs = ['assets']
+            jniLibs.srcDirs = ['libs']
+            aidl.srcDirs = ['src/main/aidl']
+            java.srcDirs = [
+                    "src/main/java/sdk/android/api",
+                    "src/main/java/sdk/android/src/java",
+                    "src/main/java/rtc_base/java/src",
+                    "src/main/java/modules/audio_device/android/java/src",
+            ]
+        }
+    }
+    //生成文档注释
+    task generateSourcesJar(type: Jar) {
+        from android.sourceSets.main.java.srcDirs
+        archiveClassifier.set('sources')
+    }
+}
+
+dependencies {
+
+    implementation 'androidx.core:core-ktx:1.9.0'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'com.google.android.material:material:1.7.0'
+}
+
+def getPropertyFromLocalProperties(key) {
+    File file = project.rootProject.file('local.properties')
+    if (file.exists()) {
+        Properties properties = new Properties()
+        properties.load(file.newDataInputStream())
+        return properties.getProperty(key)
+    }
+}
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = "com.jinkeen.base"
+            artifactId = "rtc"
+            version = "1.0.1"
+//            afterEvaluate { artifact(tasks.getByName("bundleReleaseAar")) }
+            artifact generateSourcesJar
+            pom.withXml {
+                def dependenciesNode = asNode().appendNode('dependencies')
+                configurations.implementation.allDependencies.each {
+                    // 避免出现空节点或 artifactId=unspecified 的节点
+                    if (it.group != null && (it.name != null && "unspecified" != it.name) && it.version != null) {
+                        println it.toString()
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', it.group)
+                        dependencyNode.appendNode('artifactId', it.name)
+                        dependencyNode.appendNode('version', it.version)
+                        dependencyNode.appendNode('scope', 'api')
+                    }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = "https://devrepo.devcloud.cn-east-3.huaweicloud.com/artgalaxy/cn-east-3_0c81d4c71200f2da0f19c01299498820_maven_1_0/"
+            credentials {
+                username = getPropertyFromLocalProperties("bintray.user").toString()
+                password = getPropertyFromLocalProperties("bintray.password").toString()
+            }
+        }
+    }
+}
